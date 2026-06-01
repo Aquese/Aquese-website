@@ -364,11 +364,12 @@ body::after{content:'';position:fixed;inset:0;z-index:1000;pointer-events:none;o
       <p class="contact-note">Work that matters, for teams that care about getting it right.</p>
       <span class="contact-email">austin@aquese.com</span>
     </div>
-    <form class="form reveal d1" onsubmit="return false">
-      <div class="ff"><label class="fl">Organization</label><input type="text" class="fi" placeholder="Your company"></div>
-      <div class="ff"><label class="fl">Contact</label><input type="email" class="fi" placeholder="your@email.com"></div>
-      <div class="ff"><label class="fl">Situation</label><textarea class="fi" placeholder="What are you trying to solve?"></textarea></div>
-      <button type="submit" class="form-btn">Send Inquiry <span class="form-btn-arrow">→</span></button>
+    <form class="form reveal d1" id="contactForm" action="https://formspree.io/f/xdajrgkg" method="POST">
+      <div class="ff"><label class="fl">Organization</label><input type="text" name="organization" class="fi" placeholder="Your company" required></div>
+      <div class="ff"><label class="fl">Contact</label><input type="email" name="email" class="fi" placeholder="your@email.com" required></div>
+      <div class="ff"><label class="fl">Situation</label><textarea name="message" class="fi" placeholder="What are you trying to solve?" required></textarea></div>
+      <button type="submit" class="form-btn" id="formBtn">Send Inquiry <span class="form-btn-arrow">→</span></button>
+      <div id="formMsg" style="display:none;margin-top:1.5rem;font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.1em"></div>
     </form>
   </div>
 </section>
@@ -593,6 +594,42 @@ function drawStack(){
   requestAnimationFrame(drawStack);
 }
 drawStack();
+
+// ── Formspree AJAX submission ────────────────────────────
+const contactForm = document.getElementById('contactForm');
+const formBtn = document.getElementById('formBtn');
+const formMsg = document.getElementById('formMsg');
+
+contactForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  formBtn.textContent = 'Sending...';
+  formBtn.disabled = true;
+  formMsg.style.display = 'none';
+
+  try {
+    const res = await fetch(contactForm.action, {
+      method: 'POST',
+      body: new FormData(contactForm),
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (res.ok) {
+      contactForm.reset();
+      formBtn.textContent = 'Sent';
+      formMsg.style.display = 'block';
+      formMsg.style.color = 'var(--ember)';
+      formMsg.textContent = '✓ Message received. I\'ll be in touch shortly.';
+    } else {
+      throw new Error('Server error');
+    }
+  } catch {
+    formBtn.textContent = 'Send Inquiry';
+    formBtn.disabled = false;
+    formMsg.style.display = 'block';
+    formMsg.style.color = '#c87070';
+    formMsg.textContent = '✗ Something went wrong. Try emailing austin@aquese.com directly.';
+  }
+});
 </script>
 </body>
 </html>
